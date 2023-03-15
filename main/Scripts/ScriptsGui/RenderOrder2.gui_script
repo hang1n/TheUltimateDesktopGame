@@ -1,0 +1,3 @@
+function init(self)
+	gui.set_render_order(0)
+end

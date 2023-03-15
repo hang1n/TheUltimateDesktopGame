@@ -1,0 +1,151 @@
+function init(self)
+	math.randomseed (os.time ())
+	m = 1
+	score = 0
+	timesPlayed = 0 
+
+	msg.post(".", "acquire_input_focus")
+	msg.post("@render:", "use_fixed_fit_projection", { near = -1, far = 1 })
+end
+
+	
+function on_input(self, action_id, action)
+	
+	if action_id == hash("touch") and action.pressed then
+		
+		pos = vmath.vector3(78, 28, 0)
+		local dist = 50
+
+		action_x = action.x 
+		action_y = action.y
+
+		if vmath.length(pos - (vmath.vector3(action_x, action_y, pos.z))) < dist then 
+
+			isFinished = false
+			score = 0
+			choisenColor = 0
+			
+			clear ()
+			gen ()
+
+		else
+			ClickingCircles()
+		end
+	end
+end
+
+
+
+function clear ()
+	if timesPlayed > 0 then 
+		for i = m, 99+m do
+			go.delete("/instance" ..(i-1))
+		end
+	end
+
+	label.set_text ("/counter#counter", tostring(0))
+	label.set_text ("/counter#ifLost", "")
+end
+
+
+
+function gen ()
+	
+	local x = 25
+	local y = 525
+
+	amountOfReds = 0
+	amountOfBlues = 0
+
+	CircleMatrics = {}
+	for rows = 0,9 do
+		CircleMatrics [rows] = {}
+		for columns = 0,9 do
+			CircleMatrics [rows][columns] = 0
+		end
+	end
+	
+	for circle_index = 1, 100 do
+
+		circle_index = circle_index - 1 
+		
+		row = circle_index / 10 - (circle_index / 10 % 1)
+		column = circle_index % 10
+
+		if math.random(0, 1) == 0 then
+			if amountOfBlues < 50 then
+				obj = factory.create ("/Circles#blue", vmath.vector3 (x, y , 1), nil)
+				amountOfBlues = amountOfBlues + 1
+				CircleMatrics [row][column] = 1
+			else
+				obj = factory.create ("/Circles#red", vmath.vector3 (x, y , 1), nil)
+				amountOfReds = amountOfReds + 1
+				CircleMatrics [row][column] = 2
+			end
+
+		else 
+			if amountOfReds < 50 then
+				obj = factory.create ("/Circles#red", vmath.vector3 (x, y , 1), nil)
+				amountOfReds = amountOfReds + 1
+				CircleMatrics [row][column] = 2
+			else
+				obj = factory.create ("/Circles#blue", vmath.vector3 (x, y , 1), nil)
+				amountOfBlues = amountOfBlues + 1
+				CircleMatrics [row][column] = 1
+			end
+		end
+
+		if x == 475 then 
+			x = 25
+			y = y - 50
+		else 
+			x = x + 50
+
+		end
+	end
+
+	if timesPlayed > 0 then 
+		if m == 1 then
+			m = m + 100
+		else 
+			m = m - 100
+		end
+	end
+
+	timesPlayed = timesPlayed + 1
+	
+end
+
+
+
+function ClickingCircles ()
+	for instNumber = m, 99+m do
+		pos = go.get_position("/instance"..(instNumber-1))
+
+		if vmath.length(pos - (vmath.vector3(action_x, action_y, pos.z))) < 25 and isFinished == false then  
+			inst = ("/instance"..(instNumber-1))
+
+			if m == 1 then
+				circle_index = instNumber - 1
+			else 
+				circle_index = instNumber - 1 - 100 
+			end
+			
+			row = circle_index / 10 - (circle_index / 10 % 1)
+			column = circle_index % 10
+			
+			if choisenColor == 0 then
+				score = score + 1
+				choisenColor = CircleMatrics [row][column]
+			elseif choisenColor == CircleMatrics [row][column] then
+				score = score + 1
+			else
+				isFinished = true
+				label.set_text ("/counter#ifLost", "wrong colour gg")
+			end
+
+			label.set_text ("/counter#counter", tostring(score))
+			break
+		end
+	end
+end
